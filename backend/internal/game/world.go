@@ -3,6 +3,7 @@
 //
 // Files: world.go (the World and time), station.go, player.go, ship.go,
 // goods.go (catalog), market.go (price table), trade.go (buy/sell),
+// trader.go (AI traders), plunder.go,
 // snapshot.go (read-only copies for clients), errors.go.
 package game
 
@@ -23,6 +24,7 @@ type World struct {
 	rng        *rand.Rand
 	nextPlayer int
 	nextShip   int
+	nextTrader int
 }
 
 // NewWorld creates the sector. The seed only affects random choices such as
@@ -49,13 +51,14 @@ func NewWorld(seed uint64) *World {
 	}
 }
 
-// Advance moves the world forward by one tick: ends legs that have arrived
-// and lets market prices recover.
+// Advance moves the world forward by one tick: ends legs that have arrived,
+// runs the AI traders and lets market prices recover.
 // (Named Advance because Tick is the tick counter.)
 func (w *World) Advance() {
 	w.Tick++
 	for _, s := range w.Ships {
 		s.advance(float64(w.Tick))
 	}
+	w.updateTraders()
 	w.decayMarkets()
 }

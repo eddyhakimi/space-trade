@@ -1,15 +1,5 @@
-import { useEffect, useState } from "react";
 import { routeEtaSeconds, shipState, tickNow } from "../geometry.js";
-
-// Re-render a few times per second so the ETA counts down between snapshots.
-function useClock(ms) {
-  const [now, setNow] = useState(() => performance.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(performance.now()), ms);
-    return () => clearInterval(id);
-  }, [ms]);
-  return now;
-}
+import { useClock } from "../hooks.js";
 
 // Fill bar plus one row per good carried (catalog order).
 function CargoHold({ state, ship }) {

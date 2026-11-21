@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { playerColor, shipLegs, shipState, tickNow } from "../geometry.js";
+import { PLUNDER_RADIUS, playerColor, shipLegs, shipState, tickNow, tradersInRange } from "../geometry.js";
 
 const SIZE = 1000;
 const STATION_R = 14;
@@ -65,6 +65,9 @@ function useHeadings(now) {
   };
 }
 
+// Traders below players, your own ship on top.
+const drawOrder = (ship, me) => (ship.ownerId === me ? 2 : ship.npc ? 0 : 1);
+
 // Converts a mouse event to map coordinates (viewBox units).
 function toMapPoint(svg, e) {
   const pt = svg.createSVGPoint();
@@ -74,16 +77,17 @@ function toMapPoint(svg, e) {
   return { x: Math.min(Math.max(p.x, 0), SIZE), y: Math.min(Math.max(p.y, 0), SIZE) };
 }
 
-function ShipMarker({ x, y, angle, color, mine, label }) {
-  const s = mine ? 13 : 10;
+function ShipMarker({ x, y, angle, color, mine, npc, target, label }) {
+  const s = mine ? 13 : npc ? 8 : 10;
   return (
-    <g transform={`translate(${x} ${y}) rotate(${(angle * 180) / Math.PI})`} pointerEvents="none">
+    <g transform={`translate(${x} ${y}) rotate(${(angle * 180) / Math.PI})`}>
       <polygon
         points={`${s},0 ${-s * 0.7},${s * 0.6} ${-s * 0.4},0 ${-s * 0.7},${-s * 0.6}`}
         fill={color}
-        stroke={mine ? "#fff" : "none"}
-        strokeWidth={2}
+        stroke={mine ? "#fff" : target ? "var(--bad)" : "none"}
+        strokeWidth={target ? 3 : 2}
       >
+        {/* hovering a ship shows its name */}
         <title>{label}</title>
       </polygon>
     </g>
@@ -128,6 +132,13 @@ export default function StarMap({ game, me, onMapClick }) {
     const { x, y, angle } = shipState(ship, t);
     return { x, y, angle: heading(ship.id, angle) };
   };
+
+  // Pose of every ship for this frame, computed once (heading() turns ships per call).
+  const poses = Object.fromEntries(state.ships.map((s) => [s.id, shipPose(s)]));
+  const myShip = state.ships.find((s) => s.ownerId === me);
+  const inRange = new Set(tradersInRange(state.ships, myShip, t).map((s) => s.id));
+  // Cargo is never shown: you only find out what a trader carries by plundering it.
+  const label = (ship) => (ship.npc ? ship.name : `${ship.name} (${ownerName[ship.ownerId] ?? "?"})`);
 
   const handleClick = (e) => {
     const { x, y } = toMapPoint(svgRef.current, e);
@@ -198,16 +209,28 @@ export default function StarMap({ game, me, onMapClick }) {
           .map((p) => <TargetMarker key={`target-${s.id}-${p.i}`} x={p.x} y={p.y} color={myColor} />),
       )}
 
-      {/* own ship last so it is drawn on top */}
+      {/* plunder range around your ship while it is in open space */}
+      {myShip && myShip.status !== "docked" && (
+        <circle
+          cx={poses[myShip.id].x}
+          cy={poses[myShip.id].y}
+          r={PLUNDER_RADIUS}
+          className={inRange.size > 0 ? "plunder-ring active" : "plunder-ring"}
+        />
+      )}
+
+      {/* traders first, own ship last so it is drawn on top */}
       {[...state.ships]
-        .sort((a, b) => (a.ownerId === me) - (b.ownerId === me))
+        .sort((a, b) => drawOrder(a, me) - drawOrder(b, me))
         .map((ship) => (
           <ShipMarker
             key={ship.id}
-            {...shipPose(ship)}
-            color={playerColor(state.players, ship.ownerId)}
+            {...poses[ship.id]}
+            color={ship.npc ? "var(--npc)" : playerColor(state.players, ship.ownerId)}
             mine={ship.ownerId === me}
-            label={`${ship.name} (${ownerName[ship.ownerId] ?? "?"})`}
+            npc={ship.npc}
+            target={inRange.has(ship.id)}
+            label={label(ship)}
           />
         ))}
     </svg>

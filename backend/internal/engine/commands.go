@@ -33,3 +33,11 @@ func (e *Engine) Sell(ctx context.Context, pid game.PlayerID, ship game.ShipID, 
 		return err == nil, err
 	})
 }
+
+// Plunder takes as much of a nearby AI trader's cargo as fits into the player's ship.
+func (e *Engine) Plunder(ctx context.Context, pid game.PlayerID, ship, target game.ShipID) error {
+	return e.exec(ctx, func() (bool, error) {
+		err := e.world.Plunder(pid, ship, target, e.now())
+		return err == nil, err
+	})
+}

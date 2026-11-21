@@ -91,7 +91,7 @@ func (h wsHandler) writeLoop(ctx context.Context, c *websocket.Conn, pid game.Pl
 				c.Close(websocket.StatusTryAgainLater, "too slow or server stopping")
 				return
 			}
-			if err := writeJSON(ctx, c, newStateMsg(snap, h.eng.TickInterval())); err != nil {
+			if err := writeJSON(ctx, c, newStateMsg(snap, h.eng.TickInterval(), pid)); err != nil {
 				return
 			}
 		case <-ping.C:
@@ -139,6 +139,8 @@ func (h wsHandler) command(ctx context.Context, pid game.PlayerID, m clientMsg) 
 		return h.eng.Buy(ctx, pid, m.ShipID, m.Good, m.Qty)
 	case "sell":
 		return h.eng.Sell(ctx, pid, m.ShipID, m.Good, m.Qty)
+	case "plunder":
+		return h.eng.Plunder(ctx, pid, m.ShipID, m.TargetID)
 	default:
 		return errors.New("unknown message type " + m.Type)
 	}

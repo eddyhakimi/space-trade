@@ -47,6 +47,11 @@ type Ship struct {
 	Capacity int            `json:"capacity"`
 	Cargo    map[GoodID]int `json:"cargo"`
 
+	// NPC marks an AI trader (no owner); see trader.go. idleUntil is when a
+	// docked trader leaves again (0 = just arrived).
+	NPC       bool `json:"npc,omitempty"`
+	idleUntil float64
+
 	// X/Y is the current position, or where the current leg started while travelling.
 	X float64 `json:"x"`
 	Y float64 `json:"y"`

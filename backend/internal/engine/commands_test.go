@@ -98,3 +98,31 @@ func TestTradeAppearsInNextState(t *testing.T) {
 	case <-time.After(50 * time.Millisecond):
 	}
 }
+
+func TestPlunderRejectedAtDockedTrader(t *testing.T) {
+	w := game.NewWorld(1)
+	w.SpawnTraders(1) // docked at its start station until the first ticks
+	e := startEngineWith(t, w, time.Hour)
+	pid, sub := joinAndSubscribe(t, e, "Alice")
+	first := recv(t, sub)
+	var mine, trader game.Ship
+	for _, s := range first.Ships {
+		if s.NPC {
+			trader = s
+		} else if s.OwnerID == pid {
+			mine = s
+		}
+	}
+	if !trader.NPC || trader.Status != game.Docked {
+		t.Fatalf("trader in snapshot: %+v", trader)
+	}
+	// Our ship is docked too, which is checked first.
+	if err := e.Plunder(context.Background(), pid, mine.ID, trader.ID); err != game.ErrPlunderDocked {
+		t.Fatalf("plunder while docked: %v", err)
+	}
+	select {
+	case <-sub.C:
+		t.Fatal("rejected plunder caused a broadcast")
+	case <-time.After(50 * time.Millisecond):
+	}
+}

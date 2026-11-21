@@ -9,6 +9,7 @@ package api
 //	                                                   optional "queue":true appends a stop to the route
 //	{"type":"buy","shipId":"s1","good":"ore","qty":5}  while docked: buy at this station's price
 //	{"type":"sell","shipId":"s1","good":"ore","qty":5} while docked: sell to this station
+//	{"type":"plunder","shipId":"s1","targetId":"t3"}   in open space: take a nearby AI trader's cargo
 //
 // Server → client:
 //
@@ -18,7 +19,9 @@ package api
 //	                                                   ({good, buy?, sell, baseBuy?, baseSell, pressure};
 //	                                                   no buy = not for sale; prices move unit by unit
 //	                                                   with trading and recover every tick),
-//	                                                   players[].credits, ships[].capacity, ships[].cargo {good: qty}
+//	                                                   players[].credits, ships[].capacity,
+//	                                                   ships[].cargo {good: qty} (own ships only; null for others),
+//	                                                   ships[].npc marks AI traders (no ownerId)
 //	{"type":"error","msg":"..."}                       before welcome: join failed, connection closes
 
 import (
@@ -42,6 +45,8 @@ type clientMsg struct {
 	Queue  bool        `json:"queue"`
 	Good   game.GoodID `json:"good"`
 	Qty    int         `json:"qty"`
+
+	TargetID game.ShipID `json:"targetId"`
 }
 
 type welcomeMsg struct {
@@ -65,7 +70,18 @@ func newWelcomeMsg(pid game.PlayerID, token string) welcomeMsg {
 	return welcomeMsg{Type: "welcome", PlayerID: pid, Token: token}
 }
 
-func newStateMsg(snap game.Snapshot, tick time.Duration) stateMsg {
+// newStateMsg builds the state for one viewer. Other ships' cargo is hidden
+// (sent as null): you only learn what a trader carries by plundering it.
+// The snapshot is shared between connections, so ships are copied, not changed.
+func newStateMsg(snap game.Snapshot, tick time.Duration, viewer game.PlayerID) stateMsg {
+	ships := make([]game.Ship, len(snap.Ships))
+	for i, s := range snap.Ships {
+		if s.OwnerID != viewer {
+			s.Cargo = nil
+		}
+		ships[i] = s
+	}
+	snap.Ships = ships
 	return stateMsg{Type: "state", TickMs: tick.Milliseconds(), Snapshot: snap}
 }
 

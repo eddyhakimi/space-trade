@@ -279,3 +279,52 @@ func TestWSTrade(t *testing.T) {
 		t.Fatalf("got %+v", m)
 	}
 }
+
+func TestWSPlunderErrors(t *testing.T) {
+	url := startWS(t)
+	a := dial(t, url)
+	a.join("Alice", "")
+	s := a.readUntil("state", isState)
+	ship := s.Ships[0]
+
+	a.send(map[string]any{"type": "plunder", "shipId": ship.ID, "targetId": "t99"})
+	if m := a.readUntil("error", isError); m.Msg != game.ErrUnknownShip.Error() {
+		t.Fatalf("got %+v", m)
+	}
+	a.send(map[string]any{"type": "plunder", "shipId": ship.ID, "targetId": ship.ID})
+	if m := a.readUntil("error", isError); m.Msg != game.ErrNotATrader.Error() {
+		t.Fatalf("got %+v", m)
+	}
+}
+
+func TestWSOthersCargoHidden(t *testing.T) {
+	url := startWS(t)
+	a := dial(t, url)
+	alice := a.join("Alice", "")
+	s := a.readUntil("state", isState)
+	ship := s.Ships[0]
+	var l game.Listing
+	for _, st := range s.Stations {
+		for _, sl := range st.Market {
+			if st.ID == ship.At && sl.Buy > 0 {
+				l = sl
+			}
+		}
+	}
+	a.send(map[string]any{"type": "buy", "shipId": ship.ID, "good": l.Good, "qty": 2})
+	a.readUntil("own cargo visible", func(m serverMsg) bool {
+		return isState(m) && m.Ships[0].Cargo[l.Good] == 2
+	})
+
+	b := dial(t, url)
+	b.join("Bob", "")
+	m := b.readUntil("state with both ships", func(m serverMsg) bool { return isState(m) && len(m.Ships) == 2 })
+	for _, sh := range m.Ships {
+		if sh.OwnerID == alice.PlayerID && sh.Cargo != nil {
+			t.Fatalf("Bob sees Alice's cargo: %v", sh.Cargo)
+		}
+		if sh.OwnerID != alice.PlayerID && sh.Cargo == nil {
+			t.Fatalf("Bob's own cargo missing: %+v", sh)
+		}
+	}
+}

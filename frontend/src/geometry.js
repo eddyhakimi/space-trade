@@ -117,3 +117,20 @@ export function routeEtaSeconds(ship, t, tickMs) {
   if (legs.length === 0) return 0;
   return Math.ceil((Math.max(0, legs[legs.length - 1].arriveAt - t) * tickMs) / 1000);
 }
+
+// How close a ship must be to plunder an AI trader; same as game.PlunderRadius.
+export const PLUNDER_RADIUS = 40;
+
+/**
+ * Travelling AI traders within plunder range of ship at time t. None while
+ * the ship is docked (no plundering at stations). The server re-checks.
+ */
+export function tradersInRange(ships, ship, t) {
+  if (!ship || ship.status === "docked") return [];
+  const me = shipState(ship, t);
+  return ships.filter((s) => {
+    if (!s.npc || s.status !== "travelling") return false;
+    const p = shipState(s, t);
+    return Math.hypot(p.x - me.x, p.y - me.y) <= PLUNDER_RADIUS;
+  });
+}

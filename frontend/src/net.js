@@ -138,6 +138,8 @@ export function useGameSocket(session, onJoinFailed) {
   // Trades only work while docked; the server checks credits and cargo space.
   const buy = useCallback((shipId, good, qty) => send({ type: "buy", shipId, good, qty }), [send]);
   const sell = useCallback((shipId, good, qty) => send({ type: "sell", shipId, good, qty }), [send]);
+  // Take a nearby AI trader's cargo (open space only; the server checks the distance).
+  const plunder = useCallback((shipId, targetId) => send({ type: "plunder", shipId, targetId }), [send]);
 
-  return { status, game, me, error, travel, buy, sell };
+  return { status, game, me, error, travel, buy, sell, plunder };
 }

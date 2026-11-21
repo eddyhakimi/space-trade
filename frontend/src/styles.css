@@ -10,6 +10,7 @@
   --warn: #ffb74d;
   --bad: #ef5350;
   --gold: #ffd54f;
+  --npc: #9aa4b8;
   color-scheme: dark;
 }
 
@@ -288,6 +289,45 @@ aside {
 }
 .cargo-qty {
   font-variant-numeric: tabular-nums;
+}
+
+/* --- plunder --- */
+.plunder {
+  border-color: var(--bad);
+}
+.plunder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.plunder-list li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+.plunder-cargo {
+  grid-column: 1;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.plunder-list button {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  border-color: var(--bad);
+}
+.plunder-ring {
+  fill: none;
+  stroke: var(--muted);
+  stroke-opacity: 0.4;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 6;
+  pointer-events: none;
+}
+.plunder-ring.active {
+  stroke: var(--bad);
+  stroke-opacity: 0.8;
 }
 
 /* --- market --- */

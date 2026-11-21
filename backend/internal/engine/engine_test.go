@@ -13,8 +13,14 @@ import (
 // startEngine runs a game loop for the duration of the test.
 func startEngine(t *testing.T, tick time.Duration) *Engine {
 	t.Helper()
+	return startEngineWith(t, game.NewWorld(1), tick)
+}
+
+// startEngineWith runs a game loop over a prepared world.
+func startEngineWith(t *testing.T, w *game.World, tick time.Duration) *Engine {
+	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
-	e := New(game.NewWorld(1), tick)
+	e := New(w, tick)
 	go e.Run(ctx)
 	t.Cleanup(func() {
 		cancel()

@@ -20,12 +20,13 @@ import (
 )
 
 type config struct {
-	port string        // PORT, default 8000
-	tick time.Duration // TICK_MS (milliseconds per game tick), default 1000
+	port    string        // PORT, default 8000
+	tick    time.Duration // TICK_MS (milliseconds per game tick), default 1000
+	traders int           // TRADERS (AI trade ships), default 6; 0 disables
 }
 
 func loadConfig() config {
-	cfg := config{port: "8000", tick: time.Second}
+	cfg := config{port: "8000", tick: time.Second, traders: 6}
 	if v := os.Getenv("PORT"); v != "" {
 		cfg.port = v
 	}
@@ -36,15 +37,24 @@ func loadConfig() config {
 			log.Printf("ignoring invalid TICK_MS=%q", v)
 		}
 	}
+	if v := os.Getenv("TRADERS"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			cfg.traders = n
+		} else {
+			log.Printf("ignoring invalid TRADERS=%q", v)
+		}
+	}
 	return cfg
 }
 
 func main() {
 	cfg := loadConfig()
 
-	eng := engine.New(game.NewWorld(uint64(time.Now().UnixNano())), cfg.tick)
+	world := game.NewWorld(uint64(time.Now().UnixNano()))
+	world.SpawnTraders(cfg.traders)
+	eng := engine.New(world, cfg.tick)
 	go eng.Run(context.Background())
 
-	log.Printf("backend listening on :%s (tick %s)", cfg.port, cfg.tick)
+	log.Printf("backend listening on :%s (tick %s, %d traders)", cfg.port, cfg.tick, cfg.traders)
 	log.Fatal(http.ListenAndServe(":"+cfg.port, api.NewRouter(eng)))
 }

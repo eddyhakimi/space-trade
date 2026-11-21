@@ -6,6 +6,7 @@ import StarMap from "./components/StarMap.jsx";
 import ShipPanel from "./components/ShipPanel.jsx";
 import PlayerList from "./components/PlayerList.jsx";
 import MarketPanel from "./components/MarketPanel.jsx";
+import PlunderPanel from "./components/PlunderPanel.jsx";
 
 const TOAST_MS = 4000;
 
@@ -42,7 +43,7 @@ export default function App() {
 }
 
 function Game({ session, onJoinFailed, onLeave }) {
-  const { status, game, me, error, travel, buy, sell } = useGameSocket(session, onJoinFailed);
+  const { status, game, me, error, travel, buy, sell, plunder } = useGameSocket(session, onJoinFailed);
   const myShip = game?.state.ships.find((s) => s.ownerId === me);
   const myPlayer = game?.state.players.find((p) => p.id === me);
 
@@ -75,6 +76,7 @@ function Game({ session, onJoinFailed, onLeave }) {
         <div className="layout">
           <StarMap game={game} me={me} onMapClick={(x, y, queue) => myShip && travel(myShip.id, x, y, queue)} />
           <aside>
+            <PlunderPanel game={game} me={me} onPlunder={(target) => myShip && plunder(myShip.id, target)} />
             <ShipPanel game={game} me={me} />
             <MarketPanel
               game={game}
