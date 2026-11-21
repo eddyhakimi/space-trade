@@ -1,12 +1,17 @@
 import { playerColor } from "../geometry.js";
 
+// Leaderboard: players ranked by credits, richest first (ties by name).
 export default function PlayerList({ players, me }) {
+  const ranked = [...players].sort((a, b) => b.credits - a.credits || a.name.localeCompare(b.name));
+
   return (
     <section className="panel">
-      <h2>Players</h2>
-      <ul className="players">
-        {players.map((p) => (
-          <li key={p.id}>
+      <h2>Leaderboard</h2>
+      <ol className="players">
+        {ranked.map((p, i) => (
+          <li key={p.id} className={p.id === me ? "me" : undefined}>
+            <span className="rank">{i + 1}</span>
+            {/* colors follow the server's player order, so they match the ships on the map */}
             <span className="swatch" style={{ background: playerColor(players, p.id) }} />
             <span className={p.online ? "name" : "name offline"}>
               {p.name}
@@ -18,7 +23,7 @@ export default function PlayerList({ players, me }) {
             <span className={p.online ? "dot on" : "dot"} title={p.online ? "online" : "offline"} />
           </li>
         ))}
-      </ul>
+      </ol>
     </section>
   );
 }

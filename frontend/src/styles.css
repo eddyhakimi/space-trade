@@ -201,6 +201,19 @@ aside {
 .players .name {
   flex: 1;
 }
+.players .rank {
+  width: 1.2rem;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.players li:first-child .rank {
+  color: var(--gold);
+  font-weight: 600;
+}
+.players li.me {
+  font-weight: 600;
+}
 .players .offline {
   color: var(--muted);
 }
