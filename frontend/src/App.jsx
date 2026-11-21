@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import EchoPanel from "./EchoPanel.jsx";
 
 export default function App() {
   const [status, setStatus] = useState("checking");
@@ -29,6 +30,7 @@ export default function App() {
         <span style={{ marginRight: "0.5rem" }}>●</span>
         {labels[status]}
       </p>
+      <EchoPanel />
     </main>
   );
 }
