@@ -212,6 +212,11 @@ func TestWSErrors(t *testing.T) {
 		sh, ok := shipState(m)
 		return ok && sh.Status == game.Travelling && sh.To == dest.ID && sh.ToX == dest.X
 	})
+	b.send(map[string]any{"type": "travel", "shipId": mine.ID, "x": 500, "y": 400, "queue": true})
+	b.readUntil("Bob queued a stop", func(m serverMsg) bool {
+		sh, ok := shipState(m)
+		return ok && sh.To == dest.ID && len(sh.Route) == 1 && sh.Route[0].X == 500 && sh.Route[0].Y == 400
+	})
 }
 
 func isError(m serverMsg) bool { return m.Type == "error" }

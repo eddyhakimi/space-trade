@@ -11,4 +11,5 @@ var (
 	ErrNotYourShip   = errors.New("not your ship")
 	ErrOutOfBounds   = errors.New("target is outside the map")
 	ErrAlreadyThere  = errors.New("ship is already there")
+	ErrRouteFull     = errors.New("route is full (max 10 stops)")
 )

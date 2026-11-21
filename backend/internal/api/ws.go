@@ -134,7 +134,7 @@ func (h wsHandler) command(ctx context.Context, pid game.PlayerID, m clientMsg) 
 		if m.X == nil || m.Y == nil {
 			return errors.New("travel needs x and y")
 		}
-		return h.eng.Travel(ctx, pid, m.ShipID, *m.X, *m.Y)
+		return h.eng.Travel(ctx, pid, m.ShipID, *m.X, *m.Y, m.Queue)
 	default:
 		return errors.New("unknown message type " + m.Type)
 	}

@@ -125,10 +125,11 @@ export function useGameSocket(session, onJoinFailed) {
     };
   }, [session]);
 
-  const travel = useCallback((shipId, x, y) => {
+  // queue: add (x, y) as a stop after the current route instead of flying there now.
+  const travel = useCallback((shipId, x, y, queue = false) => {
     const ws = wsRef.current;
     if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "travel", shipId, x, y }));
+      ws.send(JSON.stringify({ type: "travel", shipId, x, y, queue }));
     }
   }, []);
 

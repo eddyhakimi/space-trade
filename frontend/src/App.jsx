@@ -72,7 +72,7 @@ function Game({ session, onJoinFailed, onLeave }) {
         <p className="loading">Connecting to the sector…</p>
       ) : (
         <div className="layout">
-          <StarMap game={game} me={me} onMapClick={(x, y) => myShip && travel(myShip.id, x, y)} />
+          <StarMap game={game} me={me} onMapClick={(x, y, queue) => myShip && travel(myShip.id, x, y, queue)} />
           <aside>
             <ShipPanel game={game} me={me} />
             <PlayerList players={game.state.players} me={me} />

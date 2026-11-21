@@ -200,6 +200,7 @@ aside {
 }
 .starmap {
   cursor: crosshair;
+  user-select: none; /* shift+click adds a stop; don't select station labels */
 }
 .station.hover .station-body {
   fill: #1e4a63;

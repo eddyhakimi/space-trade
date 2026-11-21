@@ -10,7 +10,7 @@ func TestTravelSnapsToStation(t *testing.T) {
 	dest := otherStation(w, s.At)
 
 	// Just inside the snap radius: docks at the exact station position.
-	if err := w.Travel(p.ID, s.ID, dest.X+SnapRadius-1, dest.Y, 0); err != nil {
+	if err := w.Travel(p.ID, s.ID, dest.X+SnapRadius-1, dest.Y, 0, false); err != nil {
 		t.Fatal(err)
 	}
 	if s.To != dest.ID || s.ToX != dest.X || s.ToY != dest.Y {
@@ -22,7 +22,7 @@ func TestTravelSnapsToStation(t *testing.T) {
 	}
 
 	// Just outside the snap radius: stays in open space.
-	if err := w.Travel(p.ID, s.ID, dest.X+SnapRadius+1, dest.Y, float64(w.Tick)); err != nil {
+	if err := w.Travel(p.ID, s.ID, dest.X+SnapRadius+1, dest.Y, float64(w.Tick), false); err != nil {
 		t.Fatal(err)
 	}
 	advanceUntil(t, w, s)

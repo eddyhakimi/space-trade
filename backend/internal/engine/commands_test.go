@@ -21,7 +21,7 @@ func TestTravelAppearsInNextState(t *testing.T) {
 		dest = first.Stations[1]
 	}
 
-	if err := e.Travel(context.Background(), pid, ship.ID, dest.X, dest.Y); err != nil {
+	if err := e.Travel(context.Background(), pid, ship.ID, dest.X, dest.Y, false); err != nil {
 		t.Fatal(err)
 	}
 	st := recv(t, sub)
@@ -39,7 +39,7 @@ func TestTravelAppearsInNextState(t *testing.T) {
 	}
 
 	// A rejected command returns its error and broadcasts nothing.
-	if err := e.Travel(context.Background(), pid, ship.ID, -5, 100); err != game.ErrOutOfBounds {
+	if err := e.Travel(context.Background(), pid, ship.ID, -5, 100, false); err != game.ErrOutOfBounds {
 		t.Fatalf("out-of-bounds Travel: %v", err)
 	}
 	select {

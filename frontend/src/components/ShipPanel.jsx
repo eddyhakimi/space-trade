@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { etaSeconds, shipPosition, tickNow } from "../geometry.js";
+import { routeEtaSeconds, shipState, tickNow } from "../geometry.js";
 
 // Re-render a few times per second so the ETA counts down between snapshots.
 function useClock(ms) {
@@ -32,12 +32,16 @@ export default function ShipPanel({ game, me }) {
   } else if (ship.status === "idle") {
     where = <p>Holding position at {coords(ship.x, ship.y)}</p>;
   } else {
-    const pos = shipPosition(ship, t);
+    const pos = shipState(ship, t);
+    const more = ship.route?.length ?? 0;
     where = (
       <p>
         En route to <strong>{ship.to ? stationName(ship.to) : coords(ship.toX, ship.toY)}</strong>
+        {more > 0 && ` · then ${more} more stop${more > 1 ? "s" : ""}`}
         <br />
-        Now at {coords(pos.x, pos.y)} · ETA {etaSeconds(ship, t, state.tickMs)} s
+        Now at {coords(pos.x, pos.y)} · {Math.round((pos.speed * 1000) / state.tickMs)} u/s
+        <br />
+        ETA {routeEtaSeconds(ship, t, state.tickMs)} s
       </p>
     );
   }
@@ -47,7 +51,9 @@ export default function ShipPanel({ game, me }) {
       <h2>Your ship</h2>
       <p className="ship-name">{ship.name}</p>
       {where}
-      <p className="hint">Click anywhere on the map to fly there — click a station to dock.</p>
+      <p className="hint">
+        Click anywhere on the map to fly there — click a station to dock. Shift+click to add a stop to your route.
+      </p>
     </section>
   );
 }

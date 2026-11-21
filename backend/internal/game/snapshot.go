@@ -29,7 +29,9 @@ func (w *World) Snapshot(now float64) Snapshot {
 		snap.Players = append(snap.Players, *p)
 	}
 	for _, s := range w.Ships {
-		snap.Ships = append(snap.Ships, *s)
+		c := *s
+		c.Route = slices.Clone(s.Route)
+		snap.Ships = append(snap.Ships, c)
 	}
 	// Stable order so clients don't see lists reshuffle every tick.
 	slices.SortFunc(snap.Players, func(a, b Player) int { return cmp.Compare(a.ID, b.ID) })

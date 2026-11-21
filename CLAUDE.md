@@ -36,7 +36,8 @@ Go 1.24 stdlib `net/http` (method patterns like `GET /api/v1/health`) plus one d
   - `world.go`: `World`, `NewWorld(seed)`, `Advance()` (one tick; not called `Tick` because that's the counter field)
   - `station.go`: fixed station layout, `SnapRadius` (40): travel targets this close to a station dock there
   - `player.go`: `AddPlayer` (name rules, gives a ship), `PlayerByName`, `SetOnline`
-  - `ship.go`: `Travel` (any point, re-route mid-flight, click on own ship = stop), `PositionAt`, `arrive`
+  - `ship.go`: `Travel` (any point, re-route keeps speed, `queue` appends a route stop, click on own ship = brake), `PositionAt`/`SpeedAt`, `advance` (ends legs, starts the next queued one), `arrive`
+  - `motion.go`: per-leg speed profile (accelerate → cruise at max → brake). **Mirrored in `frontend/src/geometry.js`; change both together.**
   - `snapshot.go`: value copy of the world for clients; `errors.go`: all sentinel errors — **their messages are shown to players**
   - Time is continuous: commands take `now` in float ticks; legs store `DepartAt`/`ArriveAt`; arrivals resolve in `Advance`.
 - **`internal/engine`** — runs the game. **Only `Engine.Run` touches the `World`**; everything else submits closures via `exec` and waits for the reply.
@@ -55,13 +56,21 @@ Go 1.24 stdlib `net/http` (method patterns like `GET /api/v1/health`) plus one d
 React 18 on the Vite dev server, plain SVG, no other libraries. Only `frontend/src` is bind-mounted (hot reload); `index.html`, `vite.config.js` and `package.json` changes need a rebuild. `vite.config.js` sets `allowedHosts: true` and `hmr.clientPort: 8080` because the browser reaches Vite through nginx. All backend calls use relative paths (`/api/v1/...`).
 
 - `net.js`: `useGameSocket` (join, reconnect after 2 s, latest state, `travel(shipId, x, y)`); stores `{name, token}` in `localStorage` under `spacetrade.session[.<slot>]`; reconnects re-read the token (another tab may have saved a newer one) and retry rejected joins up to 5 times before returning to the join screen
-- `geometry.js`: `tickNow` (from `state.time` + time since the snapshot arrived), `shipPosition`, ETA, player colors
+- `geometry.js`: `tickNow` (from `state.time` + time since the snapshot arrived), leg profile (mirror of `game/motion.go`), `shipLegs` (current leg + predicted legs for queued stops), `shipState`, route ETA, player colors
 - `App.jsx`: join screen vs. game screen; `styles.css`: dark theme, color tokens on `:root`
-- `components/`: `StarMap.jsx` (click → map coordinates via `getScreenCTM` → `travel`; ships interpolated every animation frame), `ShipPanel.jsx`, `PlayerList.jsx`, `JoinScreen.jsx`
+- `components/`: `StarMap.jsx` (click → map coordinates via `getScreenCTM` → `travel`, shift+click queues; ships interpolated every animation frame on a smoothed clock, headings turn gradually; only your own route is drawn), `ShipPanel.jsx`, `PlayerList.jsx`, `JoinScreen.jsx`
 
 ### nginx (`nginx/nginx.conf`)
 
 Both locations forward WebSocket upgrades via `map $http_upgrade $connection_upgrade` (`/` for Vite HMR, `/api/` for the game socket, with `proxy_read_timeout 1h`). `/api/` sends `Host $http_host` (keeps the port) so coder/websocket's same-origin check matches the browser `Origin`. Upstreams are variables + `resolver 127.0.0.11`, so recreated containers are re-resolved. New backend routes must live under `/api/`.
+
+## Playing on the LAN (M5)
+
+Friends on the same network type `http://<host LAN IP>:8080` into their browser; `./scripts/lan-url.sh` prints that address and checks it answers. It works because nginx publishes 8080 on all interfaces, the socket URL comes from `location.host`, `/api/` forwards `Host $http_host` (so coder/websocket's same-origin check passes for any address), and Vite has `allowedHosts: true`. Never hardcode `localhost` in the frontend.
+
+- Browsers that force HTTPS ("Always use secure connections" in Chrome) show a "connection is not secure" page for LAN addresses (`localhost` is exempt); players click "Continue to site". The nginx log then shows `\x16\x03\x01…` 400s, which are TLS handshakes hitting the plain-HTTP port.
+- Docker-published ports normally bypass ufw; if friends still can't connect, check the host firewall (`sudo ufw status`).
+- The host must keep the stack running; every backend restart (including Air rebuilds after saving a `.go` file) resets the world for everyone.
 
 ## Adding a player action (e.g. buy/sell)
 

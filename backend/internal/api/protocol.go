@@ -6,6 +6,7 @@ package api
 //
 //	{"type":"join","name":"Alice","token":"..."}       first message; token optional (resume)
 //	{"type":"travel","shipId":"s1","x":512.5,"y":88}   fly to any map point; near a station = dock
+//	                                                   optional "queue":true appends a stop to the route
 //
 // Server → client:
 //
@@ -31,6 +32,7 @@ type clientMsg struct {
 	ShipID game.ShipID `json:"shipId"`
 	X      *float64    `json:"x"`
 	Y      *float64    `json:"y"`
+	Queue  bool        `json:"queue"`
 }
 
 type welcomeMsg struct {

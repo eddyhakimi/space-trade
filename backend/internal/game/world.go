@@ -44,8 +44,6 @@ func NewWorld(seed uint64) *World {
 func (w *World) Advance() {
 	w.Tick++
 	for _, s := range w.Ships {
-		if s.Status == Travelling && s.ArriveAt <= float64(w.Tick) {
-			s.arrive(s.ToX, s.ToY, s.To)
-		}
+		s.advance(float64(w.Tick))
 	}
 }
