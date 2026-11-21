@@ -16,6 +16,8 @@ type Player struct {
 	Online bool     `json:"online"`
 	// Credits are whole units, owned by the player (not the ship).
 	Credits int `json:"credits"`
+	// Heat is the remaining wanted time in ticks (see wanted.go).
+	Heat int `json:"heat"`
 }
 
 // AddPlayer creates a player with one ship docked at a random station.

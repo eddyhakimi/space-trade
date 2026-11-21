@@ -291,6 +291,17 @@ aside {
   font-variant-numeric: tabular-nums;
 }
 
+/* --- wanted --- */
+.wanted {
+  color: var(--bad);
+  font-variant-numeric: tabular-nums;
+}
+.market .refused {
+  color: var(--bad);
+  font-size: 0.85rem;
+  margin: 0 0 0.5rem;
+}
+
 /* --- plunder --- */
 .plunder {
   border-color: var(--bad);

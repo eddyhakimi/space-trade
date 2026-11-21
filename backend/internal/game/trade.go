@@ -64,13 +64,16 @@ func (w *World) tradeAt(playerID PlayerID, shipID ShipID, good GoodID, qty int, 
 	if s.Status != Docked {
 		return nil, nil, nil, ErrNotDocked
 	}
-	l, ok := w.listingRef(s.At, good)
-	if !ok {
-		return nil, nil, nil, ErrNotTradedHere
-	}
 	p, ok := w.Players[s.OwnerID]
 	if !ok {
 		return nil, nil, nil, ErrUnknownPlayer
+	}
+	if p.Heat > RefuseTradeHeat {
+		return nil, nil, nil, ErrWanted
+	}
+	l, ok := w.listingRef(s.At, good)
+	if !ok {
+		return nil, nil, nil, ErrNotTradedHere
 	}
 	return s, p, l, nil
 }

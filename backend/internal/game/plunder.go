@@ -9,7 +9,8 @@ const PlunderRadius = 40
 // Plunder moves as much of a travelling AI trader's cargo into the player's
 // ship as fits, in catalog order; the trader flies on with the rest. The
 // player's ship must be in open space and within PlunderRadius of the trader
-// at time now. Docked traders are protected.
+// at time now. Docked traders are protected. A successful plunder makes the
+// player wanted (see wanted.go).
 func (w *World) Plunder(playerID PlayerID, shipID, targetID ShipID, now float64) error {
 	s, ok := w.Ships[shipID]
 	if !ok {
@@ -24,6 +25,10 @@ func (w *World) Plunder(playerID PlayerID, shipID, targetID ShipID, now float64)
 	}
 	if !t.NPC {
 		return ErrNotATrader
+	}
+	p, ok := w.Players[playerID]
+	if !ok {
+		return ErrUnknownPlayer
 	}
 	s.advance(now)
 	t.advance(now)
@@ -57,5 +62,6 @@ func (w *World) Plunder(playerID PlayerID, shipID, targetID ShipID, now float64)
 		}
 		free -= n
 	}
+	p.addHeat()
 	return nil
 }

@@ -1,7 +1,8 @@
 import { playerColor } from "../geometry.js";
+import { formatHeat } from "../market.js";
 
 // Leaderboard: players ranked by credits, richest first (ties by name).
-export default function PlayerList({ players, me }) {
+export default function PlayerList({ players, me, tickMs }) {
   const ranked = [...players].sort((a, b) => b.credits - a.credits || a.name.localeCompare(b.name));
 
   return (
@@ -16,6 +17,12 @@ export default function PlayerList({ players, me }) {
             <span className={p.online ? "name" : "name offline"}>
               {p.name}
               {p.id === me && " (you)"}
+              {p.heat > 0 && (
+                <span className="wanted" title={`wanted for ${formatHeat(p.heat, tickMs)}`}>
+                  {" "}
+                  ☠
+                </span>
+              )}
             </span>
             <span className="credits" title="credits">
               {p.credits.toLocaleString()}

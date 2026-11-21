@@ -77,15 +77,15 @@ function toMapPoint(svg, e) {
   return { x: Math.min(Math.max(p.x, 0), SIZE), y: Math.min(Math.max(p.y, 0), SIZE) };
 }
 
-function ShipMarker({ x, y, angle, color, mine, npc, target, label }) {
+function ShipMarker({ x, y, angle, color, mine, npc, target, wanted, label }) {
   const s = mine ? 13 : npc ? 8 : 10;
   return (
     <g transform={`translate(${x} ${y}) rotate(${(angle * 180) / Math.PI})`}>
       <polygon
         points={`${s},0 ${-s * 0.7},${s * 0.6} ${-s * 0.4},0 ${-s * 0.7},${-s * 0.6}`}
         fill={color}
-        stroke={mine ? "#fff" : target ? "var(--bad)" : "none"}
-        strokeWidth={target ? 3 : 2}
+        stroke={wanted || target ? "var(--bad)" : mine ? "#fff" : "none"}
+        strokeWidth={wanted || target ? 3 : 2}
       >
         {/* hovering a ship shows its name */}
         <title>{label}</title>
@@ -138,7 +138,11 @@ export default function StarMap({ game, me, onMapClick }) {
   const myShip = state.ships.find((s) => s.ownerId === me);
   const inRange = new Set(tradersInRange(state.ships, myShip, t).map((s) => s.id));
   // Cargo is never shown: you only find out what a trader carries by plundering it.
-  const label = (ship) => (ship.npc ? ship.name : `${ship.name} (${ownerName[ship.ownerId] ?? "?"})`);
+  const heat = Object.fromEntries(state.players.map((p) => [p.id, p.heat]));
+  const label = (ship) =>
+    ship.npc
+      ? ship.name
+      : `${ship.name} (${ownerName[ship.ownerId] ?? "?"})${heat[ship.ownerId] > 0 ? " ☠ wanted" : ""}`;
 
   const handleClick = (e) => {
     const { x, y } = toMapPoint(svgRef.current, e);
@@ -228,6 +232,7 @@ export default function StarMap({ game, me, onMapClick }) {
             {...poses[ship.id]}
             color={ship.npc ? "var(--npc)" : playerColor(state.players, ship.ownerId)}
             mine={ship.ownerId === me}
+            wanted={heat[ship.ownerId] > 0}
             npc={ship.npc}
             target={inRange.has(ship.id)}
             label={label(ship)}

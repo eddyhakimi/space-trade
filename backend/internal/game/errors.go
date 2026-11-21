@@ -27,4 +27,5 @@ var (
 	ErrTargetProtected  = errors.New("that trader is docked and protected")
 	ErrTooFar           = errors.New("too far away to plunder")
 	ErrNothingToPlunder = errors.New("that trader's hold is empty")
+	ErrWanted           = errors.New("stations won't trade with you while you're this wanted — lie low for a while")
 )

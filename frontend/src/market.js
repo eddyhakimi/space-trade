@@ -64,3 +64,12 @@ export function trend(price, base) {
   if (price <= base * (1 - TREND_THRESHOLD)) return "down";
   return null;
 }
+
+// Above this heat, stations refuse to trade with you; same as game.RefuseTradeHeat.
+export const REFUSE_TRADE_HEAT = 180;
+
+// Heat (ticks) as "m:ss" of real time.
+export function formatHeat(ticks, tickMs) {
+  const s = Math.max(0, Math.ceil((ticks * tickMs) / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}

@@ -7,6 +7,7 @@ import ShipPanel from "./components/ShipPanel.jsx";
 import PlayerList from "./components/PlayerList.jsx";
 import MarketPanel from "./components/MarketPanel.jsx";
 import PlunderPanel from "./components/PlunderPanel.jsx";
+import { REFUSE_TRADE_HEAT, formatHeat } from "./market.js";
 
 const TOAST_MS = 4000;
 
@@ -63,6 +64,12 @@ function Game({ session, onJoinFailed, onLeave }) {
         <span className={`conn ${status}`}>● {status}</span>
         {game && <span className="tick">Day {game.state.tick}</span>}
         <span className="spacer" />
+        {myPlayer?.heat > 0 && (
+          <span className="wanted" title="you plundered a trader: everyone can see you're wanted">
+            ☠ Wanted {formatHeat(myPlayer.heat, game.state.tickMs)}
+            {myPlayer.heat > REFUSE_TRADE_HEAT && " · stations refuse trade"}
+          </span>
+        )}
         {myPlayer && <span className="credits">{myPlayer.credits.toLocaleString()} cr</span>}
         <span className="captain">Captain {myPlayer?.name ?? session.name}</span>
         <button onClick={onLeave} title="Forget this captain on this device">
@@ -84,7 +91,7 @@ function Game({ session, onJoinFailed, onLeave }) {
               onBuy={(good, qty) => myShip && buy(myShip.id, good, qty)}
               onSell={(good, qty) => myShip && sell(myShip.id, good, qty)}
             />
-            <PlayerList players={game.state.players} me={me} />
+            <PlayerList players={game.state.players} me={me} tickMs={game.state.tickMs} />
           </aside>
         </div>
       )}

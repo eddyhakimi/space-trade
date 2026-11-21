@@ -3,7 +3,7 @@
 //
 // Files: world.go (the World and time), station.go, player.go, ship.go,
 // goods.go (catalog), market.go (price table), trade.go (buy/sell),
-// trader.go (AI traders), plunder.go,
+// trader.go (AI traders), plunder.go, wanted.go (heat),
 // snapshot.go (read-only copies for clients), errors.go.
 package game
 
@@ -52,7 +52,7 @@ func NewWorld(seed uint64) *World {
 }
 
 // Advance moves the world forward by one tick: ends legs that have arrived,
-// runs the AI traders and lets market prices recover.
+// runs the AI traders, lets market prices recover and cools wanted players.
 // (Named Advance because Tick is the tick counter.)
 func (w *World) Advance() {
 	w.Tick++
@@ -61,4 +61,5 @@ func (w *World) Advance() {
 	}
 	w.updateTraders()
 	w.decayMarkets()
+	w.coolDown()
 }

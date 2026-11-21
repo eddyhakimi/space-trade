@@ -328,3 +328,23 @@ func TestWSOthersCargoHidden(t *testing.T) {
 		}
 	}
 }
+
+func TestWSStateHasHeat(t *testing.T) {
+	url := startWS(t)
+	a := dial(t, url)
+	a.join("Alice", "")
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	for {
+		_, data, err := a.c.Read(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(data), `"type":"state"`) {
+			if !strings.Contains(string(data), `"heat":0`) {
+				t.Fatalf("state without players[].heat: %s", data)
+			}
+			return
+		}
+	}
+}

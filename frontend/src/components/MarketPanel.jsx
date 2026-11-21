@@ -1,4 +1,4 @@
-import { maxBuy, sellValue, trend } from "../market.js";
+import { REFUSE_TRADE_HEAT, formatHeat, maxBuy, sellValue, trend } from "../market.js";
 
 // A price with ▲/▼ when it is clearly above/below the station's normal price.
 function Price({ value, base }) {
@@ -25,10 +25,18 @@ export default function MarketPanel({ game, me, onBuy, onSell }) {
   const goodName = (id) => state.goods.find((g) => g.id === id)?.name ?? id;
   const used = Object.values(ship.cargo ?? {}).reduce((a, b) => a + b, 0);
   const free = ship.capacity - used;
+  // Too wanted: the station refuses to trade (the server enforces it too).
+  const locked = player.heat > REFUSE_TRADE_HEAT;
 
   return (
     <section className="panel market">
       <h2>Market — {station.name}</h2>
+      {locked && (
+        <p className="refused">
+          ☠ {station.name} won't trade with you — cools down in{" "}
+          {formatHeat(player.heat - REFUSE_TRADE_HEAT, state.tickMs)}
+        </p>
+      )}
       <table>
         <thead>
           <tr>
@@ -50,11 +58,11 @@ export default function MarketPanel({ game, me, onBuy, onSell }) {
                   {l.buy ? (
                     <>
                       <Price value={l.buy} base={l.baseBuy} />
-                      <button disabled={max.qty < 1} onClick={() => onBuy(l.good, 1)} title={`Buy 1 for ${l.buy} cr`}>
+                      <button disabled={locked || max.qty < 1} onClick={() => onBuy(l.good, 1)} title={`Buy 1 for ${l.buy} cr`}>
                         1
                       </button>
                       <button
-                        disabled={max.qty < 1}
+                        disabled={locked || max.qty < 1}
                         onClick={() => onBuy(l.good, max.qty)}
                         title={`Buy ${max.qty} for ${max.cost} cr`}
                       >
@@ -69,11 +77,11 @@ export default function MarketPanel({ game, me, onBuy, onSell }) {
                 </td>
                 <td className="sell">
                   <Price value={l.sell} base={l.baseSell} />
-                  <button disabled={held < 1} onClick={() => onSell(l.good, 1)} title={`Sell 1 for ${l.sell} cr`}>
+                  <button disabled={locked || held < 1} onClick={() => onSell(l.good, 1)} title={`Sell 1 for ${l.sell} cr`}>
                     1
                   </button>
                   <button
-                    disabled={held < 1}
+                    disabled={locked || held < 1}
                     onClick={() => onSell(l.good, held)}
                     title={`Sell ${held} for ${sellValue(l, held)} cr`}
                   >

@@ -19,7 +19,9 @@ package api
 //	                                                   ({good, buy?, sell, baseBuy?, baseSell, pressure};
 //	                                                   no buy = not for sale; prices move unit by unit
 //	                                                   with trading and recover every tick),
-//	                                                   players[].credits, ships[].capacity,
+//	                                                   players[].credits, players[].heat (remaining wanted
+//	                                                   ticks: > 0 wanted, > 180 stations refuse to trade),
+//	                                                   ships[].capacity,
 //	                                                   ships[].cargo {good: qty} (own ships only; null for others),
 //	                                                   ships[].npc marks AI traders (no ownerId)
 //	{"type":"error","msg":"..."}                       before welcome: join failed, connection closes
