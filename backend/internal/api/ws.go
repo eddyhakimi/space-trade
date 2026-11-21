@@ -135,6 +135,10 @@ func (h wsHandler) command(ctx context.Context, pid game.PlayerID, m clientMsg) 
 			return errors.New("travel needs x and y")
 		}
 		return h.eng.Travel(ctx, pid, m.ShipID, *m.X, *m.Y, m.Queue)
+	case "buy":
+		return h.eng.Buy(ctx, pid, m.ShipID, m.Good, m.Qty)
+	case "sell":
+		return h.eng.Sell(ctx, pid, m.ShipID, m.Good, m.Qty)
 	default:
 		return errors.New("unknown message type " + m.Type)
 	}

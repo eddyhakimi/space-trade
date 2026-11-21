@@ -7,11 +7,18 @@ package api
 //	{"type":"join","name":"Alice","token":"..."}       first message; token optional (resume)
 //	{"type":"travel","shipId":"s1","x":512.5,"y":88}   fly to any map point; near a station = dock
 //	                                                   optional "queue":true appends a stop to the route
+//	{"type":"buy","shipId":"s1","good":"ore","qty":5}  while docked: buy at this station's price
+//	{"type":"sell","shipId":"s1","good":"ore","qty":5} while docked: sell to this station
 //
 // Server → client:
 //
 //	{"type":"welcome","playerId":"p1","token":"..."}   after a successful join
-//	{"type":"state","tickMs":1000,"tick":..,"time":..,"stations":[..],"players":[..],"ships":[..]}
+//	{"type":"state","tickMs":1000,"tick":..,"time":..,"goods":[..],"stations":[..],"players":[..],"ships":[..]}
+//	                                                   stations[].market lists the goods traded there
+//	                                                   ({good, buy?, sell, baseBuy?, baseSell, pressure};
+//	                                                   no buy = not for sale; prices move unit by unit
+//	                                                   with trading and recover every tick),
+//	                                                   players[].credits, ships[].capacity, ships[].cargo {good: qty}
 //	{"type":"error","msg":"..."}                       before welcome: join failed, connection closes
 
 import (
@@ -33,6 +40,8 @@ type clientMsg struct {
 	X      *float64    `json:"x"`
 	Y      *float64    `json:"y"`
 	Queue  bool        `json:"queue"`
+	Good   game.GoodID `json:"good"`
+	Qty    int         `json:"qty"`
 }
 
 type welcomeMsg struct {

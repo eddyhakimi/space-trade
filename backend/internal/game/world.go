@@ -2,6 +2,7 @@
 // A World must only be touched by one goroutine at a time (the engine loop).
 //
 // Files: world.go (the World and time), station.go, player.go, ship.go,
+// goods.go (catalog), market.go (price table), trade.go (buy/sell),
 // snapshot.go (read-only copies for clients), errors.go.
 package game
 
@@ -13,10 +14,12 @@ const MapSize = 1000
 type World struct {
 	Tick     int64
 	Stations []Station // fixed order, used for rendering
+	Goods    []Good    // fixed catalog, in display order
 	Players  map[PlayerID]*Player
 	Ships    map[ShipID]*Ship
 
 	stationIdx map[StationID]int
+	goodIdx    map[GoodID]int
 	rng        *rand.Rand
 	nextPlayer int
 	nextShip   int
@@ -30,8 +33,15 @@ func NewWorld(seed uint64) *World {
 	for i, s := range stations {
 		idx[s.ID] = i
 	}
+	goods := defaultGoods()
+	goodIdx := make(map[GoodID]int, len(goods))
+	for i, g := range goods {
+		goodIdx[g.ID] = i
+	}
 	return &World{
 		Stations:   stations,
+		Goods:      goods,
+		goodIdx:    goodIdx,
 		Players:    map[PlayerID]*Player{},
 		Ships:      map[ShipID]*Ship{},
 		stationIdx: idx,
@@ -39,11 +49,13 @@ func NewWorld(seed uint64) *World {
 	}
 }
 
-// Advance moves the world forward by one tick and ends legs that have arrived.
+// Advance moves the world forward by one tick: ends legs that have arrived
+// and lets market prices recover.
 // (Named Advance because Tick is the tick counter.)
 func (w *World) Advance() {
 	w.Tick++
 	for _, s := range w.Ships {
 		s.advance(float64(w.Tick))
 	}
+	w.decayMarkets()
 }

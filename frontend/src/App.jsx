@@ -5,6 +5,7 @@ import JoinScreen from "./components/JoinScreen.jsx";
 import StarMap from "./components/StarMap.jsx";
 import ShipPanel from "./components/ShipPanel.jsx";
 import PlayerList from "./components/PlayerList.jsx";
+import MarketPanel from "./components/MarketPanel.jsx";
 
 const TOAST_MS = 4000;
 
@@ -41,8 +42,9 @@ export default function App() {
 }
 
 function Game({ session, onJoinFailed, onLeave }) {
-  const { status, game, me, error, travel } = useGameSocket(session, onJoinFailed);
+  const { status, game, me, error, travel, buy, sell } = useGameSocket(session, onJoinFailed);
   const myShip = game?.state.ships.find((s) => s.ownerId === me);
+  const myPlayer = game?.state.players.find((p) => p.id === me);
 
   // Show command errors briefly.
   const [toast, setToast] = useState(null);
@@ -60,9 +62,8 @@ function Game({ session, onJoinFailed, onLeave }) {
         <span className={`conn ${status}`}>● {status}</span>
         {game && <span className="tick">Day {game.state.tick}</span>}
         <span className="spacer" />
-        <span className="captain">
-          Captain {game?.state.players.find((p) => p.id === me)?.name ?? session.name}
-        </span>
+        {myPlayer && <span className="credits">{myPlayer.credits.toLocaleString()} cr</span>}
+        <span className="captain">Captain {myPlayer?.name ?? session.name}</span>
         <button onClick={onLeave} title="Forget this captain on this device">
           Leave
         </button>
@@ -75,6 +76,12 @@ function Game({ session, onJoinFailed, onLeave }) {
           <StarMap game={game} me={me} onMapClick={(x, y, queue) => myShip && travel(myShip.id, x, y, queue)} />
           <aside>
             <ShipPanel game={game} me={me} />
+            <MarketPanel
+              game={game}
+              me={me}
+              onBuy={(good, qty) => myShip && buy(myShip.id, good, qty)}
+              onSell={(good, qty) => myShip && sell(myShip.id, good, qty)}
+            />
             <PlayerList players={game.state.players} me={me} />
           </aside>
         </div>

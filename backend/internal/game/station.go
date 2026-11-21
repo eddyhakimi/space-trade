@@ -12,11 +12,13 @@ type Station struct {
 	Name string    `json:"name"`
 	X    float64   `json:"x"`
 	Y    float64   `json:"y"`
+	// Market lists the goods traded here (see market.go).
+	Market []Listing `json:"market"`
 }
 
-// defaultStations is the fixed layout of the sector.
+// defaultStations is the fixed layout of the sector, with each station's market.
 func defaultStations() []Station {
-	return []Station{
+	stations := []Station{
 		{ID: "kepler", Name: "Kepler Yard", X: 150, Y: 200},
 		{ID: "ostrava", Name: "Ostrava Ring", X: 520, Y: 120},
 		{ID: "halden", Name: "Halden Deep", X: 860, Y: 300},
@@ -24,6 +26,11 @@ func defaultStations() []Station {
 		{ID: "iolo", Name: "Iolo Station", X: 720, Y: 680},
 		{ID: "marrow", Name: "Marrow Point", X: 180, Y: 880},
 	}
+	markets := defaultMarkets()
+	for i := range stations {
+		stations[i].Market = markets[stations[i].ID]
+	}
+	return stations
 }
 
 // Station returns the station with the given ID.

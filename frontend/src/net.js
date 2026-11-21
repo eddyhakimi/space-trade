@@ -125,13 +125,19 @@ export function useGameSocket(session, onJoinFailed) {
     };
   }, [session]);
 
-  // queue: add (x, y) as a stop after the current route instead of flying there now.
-  const travel = useCallback((shipId, x, y, queue = false) => {
+  const send = useCallback((msg) => {
     const ws = wsRef.current;
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: "travel", shipId, x, y, queue }));
-    }
+    if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
   }, []);
 
-  return { status, game, me, error, travel };
+  // queue: add (x, y) as a stop after the current route instead of flying there now.
+  const travel = useCallback(
+    (shipId, x, y, queue = false) => send({ type: "travel", shipId, x, y, queue }),
+    [send],
+  );
+  // Trades only work while docked; the server checks credits and cargo space.
+  const buy = useCallback((shipId, good, qty) => send({ type: "buy", shipId, good, qty }), [send]);
+  const sell = useCallback((shipId, good, qty) => send({ type: "sell", shipId, good, qty }), [send]);
+
+  return { status, game, me, error, travel, buy, sell };
 }

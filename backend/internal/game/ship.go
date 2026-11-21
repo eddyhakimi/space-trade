@@ -41,6 +41,12 @@ type Ship struct {
 	Speed   float64    `json:"speed"` // max speed
 	Accel   float64    `json:"accel"`
 	Status  ShipStatus `json:"status"`
+
+	// Capacity is how many cargo units fit; Cargo holds units per good
+	// (only non-zero entries).
+	Capacity int            `json:"capacity"`
+	Cargo    map[GoodID]int `json:"cargo"`
+
 	// X/Y is the current position, or where the current leg started while travelling.
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
@@ -66,18 +72,29 @@ type Ship struct {
 func (w *World) newShip(owner *Player, station Station) *Ship {
 	w.nextShip++
 	s := &Ship{
-		ID:      ShipID(fmt.Sprintf("s%d", w.nextShip)),
-		OwnerID: owner.ID,
-		Name:    owner.Name + "'s freighter",
-		Speed:   DefaultShipSpeed,
-		Accel:   DefaultShipAccel,
-		Status:  Docked,
-		X:       station.X,
-		Y:       station.Y,
-		At:      station.ID,
+		ID:       ShipID(fmt.Sprintf("s%d", w.nextShip)),
+		OwnerID:  owner.ID,
+		Name:     owner.Name + "'s freighter",
+		Speed:    DefaultShipSpeed,
+		Accel:    DefaultShipAccel,
+		Capacity: DefaultCargoCapacity,
+		Cargo:    map[GoodID]int{},
+		Status:   Docked,
+		X:        station.X,
+		Y:        station.Y,
+		At:       station.ID,
 	}
 	w.Ships[s.ID] = s
 	return s
+}
+
+// CargoUsed is how many cargo units the ship carries.
+func (s *Ship) CargoUsed() int {
+	n := 0
+	for _, q := range s.Cargo {
+		n += q
+	}
+	return n
 }
 
 // leg returns the current leg's length and speed profile.

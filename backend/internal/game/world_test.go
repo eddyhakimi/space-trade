@@ -47,6 +47,21 @@ func openPoint(t *testing.T, w *World) (float64, float64) {
 	return 0, 0
 }
 
+// dockedTrade adds a player and returns it with its docked ship and a good
+// the ship's station produces (sells and buys back).
+func dockedTrade(t *testing.T, w *World, name string) (*Player, *Ship, Listing) {
+	t.Helper()
+	p, s := newPlayer(t, w, name)
+	st, _ := w.Station(s.At)
+	for _, l := range st.Market {
+		if l.Buy > 0 {
+			return p, s, l
+		}
+	}
+	t.Fatalf("station %s produces nothing", st.ID)
+	return nil, nil, Listing{}
+}
+
 func near(a, b float64) bool { return math.Abs(a-b) < 1e-9 }
 
 // advanceUntil advances whole ticks until the ship is no longer travelling
@@ -72,9 +87,20 @@ func TestNewWorldHasStations(t *testing.T) {
 		if s.X < 0 || s.X > MapSize || s.Y < 0 || s.Y > MapSize {
 			t.Errorf("station %s outside the map: (%v,%v)", s.ID, s.X, s.Y)
 		}
-		if got, ok := w.Station(s.ID); !ok || got != s {
+		if got, ok := w.Station(s.ID); !ok || got.ID != s.ID || got.Name != s.Name {
 			t.Errorf("Station(%s) lookup failed", s.ID)
 		}
+	}
+	if len(w.Goods) != 10 {
+		t.Fatalf("got %d goods, want 10", len(w.Goods))
+	}
+	for _, g := range w.Goods {
+		if got, ok := w.Good(g.ID); !ok || got != g {
+			t.Errorf("Good(%s) lookup failed", g.ID)
+		}
+	}
+	if _, ok := w.Good("gold"); ok {
+		t.Error("found a good that doesn't exist")
 	}
 }
 
@@ -95,9 +121,15 @@ func TestSnapshotIsCopy(t *testing.T) {
 	}
 
 	snap.Ships[0].Status = Travelling
+	snap.Ships[0].Cargo["food"] = 5
 	snap.Players[0].Name = "Mallory"
 	snap.Stations[0].Name = "Renamed"
+	snap.Stations[0].Market[0].Sell = 9999
+	snap.Goods[0].Name = "Renamed"
 	if s.Status != Docked || w.Players["p1"].Name != "Alice" || w.Stations[0].Name == "Renamed" {
 		t.Error("changing the snapshot changed the world")
+	}
+	if s.CargoUsed() != 0 || w.Stations[0].Market[0].Sell == 9999 || w.Goods[0].Name == "Renamed" {
+		t.Error("changing the snapshot's cargo, market or goods changed the world")
 	}
 }

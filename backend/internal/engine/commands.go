@@ -17,3 +17,19 @@ func (e *Engine) Travel(ctx context.Context, pid game.PlayerID, ship game.ShipID
 		return err == nil, err
 	})
 }
+
+// Buy loads goods onto one of the player's docked ships at the station's price.
+func (e *Engine) Buy(ctx context.Context, pid game.PlayerID, ship game.ShipID, good game.GoodID, qty int) error {
+	return e.exec(ctx, func() (bool, error) {
+		err := e.world.Buy(pid, ship, good, qty, e.now())
+		return err == nil, err
+	})
+}
+
+// Sell unloads goods from one of the player's docked ships at the station's price.
+func (e *Engine) Sell(ctx context.Context, pid game.PlayerID, ship game.ShipID, good game.GoodID, qty int) error {
+	return e.exec(ctx, func() (bool, error) {
+		err := e.world.Sell(pid, ship, good, qty, e.now())
+		return err == nil, err
+	})
+}

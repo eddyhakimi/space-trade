@@ -11,6 +11,49 @@ function useClock(ms) {
   return now;
 }
 
+// Fill bar plus one row per good carried (catalog order).
+function CargoHold({ state, ship }) {
+  const items = state.goods.filter((g) => ship.cargo?.[g.id] > 0);
+  const used = items.reduce((n, g) => n + ship.cargo[g.id], 0);
+  const pct = ship.capacity > 0 ? Math.min(100, (used / ship.capacity) * 100) : 0;
+  const dockedAt = ship.status === "docked" ? ship.at : null;
+
+  return (
+    <div className="cargo">
+      <div className="cargo-head">
+        <span>Cargo hold</span>
+        <span className={used >= ship.capacity ? "cargo-count full" : "cargo-count"}>
+          {used} / {ship.capacity}
+        </span>
+      </div>
+      <div
+        className="cargo-bar"
+        role="meter"
+        aria-label="Cargo used"
+        aria-valuemin={0}
+        aria-valuemax={ship.capacity}
+        aria-valuenow={used}
+      >
+        <div className={used >= ship.capacity ? "fill full" : "fill"} style={{ width: `${pct}%` }} />
+      </div>
+      {items.length === 0 ? (
+        <p className="cargo-empty">
+          {dockedAt ? "Empty — buy goods in the market below." : "Empty — dock at a station to buy goods."}
+        </p>
+      ) : (
+        <ul className="cargo-list">
+          {items.map((g) => (
+            <li key={g.id}>
+              <span className="cargo-name">{g.name}</span>
+              <span className="cargo-qty">× {ship.cargo[g.id]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 const coords = (x, y) => `(${Math.round(x)}, ${Math.round(y)})`;
 
 export default function ShipPanel({ game, me }) {
@@ -51,8 +94,10 @@ export default function ShipPanel({ game, me }) {
       <h2>Your ship</h2>
       <p className="ship-name">{ship.name}</p>
       {where}
+      <CargoHold state={state} ship={ship} />
       <p className="hint">
         Click anywhere on the map to fly there — click a station to dock. Shift+click to add a stop to your route.
+        Dock at a station to trade.
       </p>
     </section>
   );

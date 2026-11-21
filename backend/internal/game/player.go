@@ -14,6 +14,8 @@ type Player struct {
 	ID     PlayerID `json:"id"`
 	Name   string   `json:"name"`
 	Online bool     `json:"online"`
+	// Credits are whole units, owned by the player (not the ship).
+	Credits int `json:"credits"`
 }
 
 // AddPlayer creates a player with one ship docked at a random station.
@@ -27,7 +29,7 @@ func (w *World) AddPlayer(name string) (*Player, error) {
 	}
 
 	w.nextPlayer++
-	p := &Player{ID: PlayerID(fmt.Sprintf("p%d", w.nextPlayer)), Name: name}
+	p := &Player{ID: PlayerID(fmt.Sprintf("p%d", w.nextPlayer)), Name: name, Credits: StartingCredits}
 	w.Players[p.ID] = p
 
 	start := w.Stations[w.rng.IntN(len(w.Stations))]

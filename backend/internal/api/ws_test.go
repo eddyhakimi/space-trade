@@ -236,3 +236,46 @@ func TestWSPlayersSeeEachOther(t *testing.T) {
 		return isState(m) && len(m.Players) == 2 && !m.Players[1].Online
 	})
 }
+
+func TestWSTrade(t *testing.T) {
+	url := startWS(t)
+	a := dial(t, url)
+	w := a.join("Alice", "")
+	s := a.readUntil("state", isState)
+	ship := s.Ships[0]
+	var l game.Listing
+	for _, st := range s.Stations {
+		for _, sl := range st.Market {
+			if st.ID == ship.At && sl.Buy > 0 {
+				l = sl
+			}
+		}
+	}
+	if l.Buy == 0 {
+		t.Fatalf("station %s sells nothing", ship.At)
+	}
+
+	a.send(map[string]any{"type": "buy", "shipId": ship.ID, "good": l.Good, "qty": 2})
+	a.readUntil("cargo bought", func(m serverMsg) bool {
+		return isState(m) && m.Ships[0].Cargo[l.Good] == 2 && m.Players[0].Credits == game.StartingCredits-l.BuyCost(2)
+	})
+	a.send(map[string]any{"type": "sell", "shipId": ship.ID, "good": l.Good, "qty": 2})
+	a.readUntil("cargo sold", func(m serverMsg) bool {
+		_, held := m.Ships[0].Cargo[l.Good]
+		return isState(m) && !held && m.Players[0].ID == w.PlayerID
+	})
+
+	a.send(map[string]any{"type": "buy", "shipId": ship.ID, "good": l.Good, "qty": 0})
+	if m := a.readUntil("error", isError); m.Msg != game.ErrBadQuantity.Error() {
+		t.Fatalf("got %+v", m)
+	}
+	a.send(map[string]any{"type": "buy", "shipId": ship.ID, "good": "gold", "qty": 1})
+	if m := a.readUntil("error", isError); m.Msg != game.ErrUnknownGood.Error() {
+		t.Fatalf("got %+v", m)
+	}
+	// The connection still works after errors.
+	a.send(map[string]any{"type": "sell", "shipId": ship.ID, "good": l.Good, "qty": 1})
+	if m := a.readUntil("error", isError); m.Msg != game.ErrNotEnoughCargo.Error() {
+		t.Fatalf("got %+v", m)
+	}
+}

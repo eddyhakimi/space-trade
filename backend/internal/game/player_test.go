@@ -19,6 +19,9 @@ func TestAddPlayerDocksShip(t *testing.T) {
 	if s.X != st.X || s.Y != st.Y {
 		t.Errorf("ship at (%v,%v), station at (%v,%v)", s.X, s.Y, st.X, st.Y)
 	}
+	if p.Credits != StartingCredits || s.Capacity != DefaultCargoCapacity || s.CargoUsed() != 0 {
+		t.Errorf("new player: %d credits, ship capacity %d with %d used", p.Credits, s.Capacity, s.CargoUsed())
+	}
 }
 
 func TestAddPlayerNameValidation(t *testing.T) {

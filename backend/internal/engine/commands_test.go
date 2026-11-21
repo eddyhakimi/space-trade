@@ -48,3 +48,53 @@ func TestTravelAppearsInNextState(t *testing.T) {
 	case <-time.After(50 * time.Millisecond):
 	}
 }
+
+func TestTradeAppearsInNextState(t *testing.T) {
+	e := startEngine(t, time.Hour) // no ticks: only command broadcasts
+	pid, sub := joinAndSubscribe(t, e, "Alice")
+	first := recv(t, sub)
+	ship := first.Ships[0]
+	var l game.Listing
+	for _, st := range first.Stations {
+		if st.ID != ship.At {
+			continue
+		}
+		for _, sl := range st.Market {
+			if sl.Buy > 0 {
+				l = sl
+			}
+		}
+	}
+	if l.Buy == 0 {
+		t.Fatalf("station %s sells nothing", ship.At)
+	}
+
+	if err := e.Buy(context.Background(), pid, ship.ID, l.Good, 2); err != nil {
+		t.Fatal(err)
+	}
+	st := recv(t, sub)
+	if c := st.Players[0].Credits; c != game.StartingCredits-l.BuyCost(2) {
+		t.Fatalf("credits after buying 2 for %d: %d", l.BuyCost(2), c)
+	}
+	if got := st.Ships[0].Cargo[l.Good]; got != 2 {
+		t.Fatalf("cargo after buy: %v", st.Ships[0].Cargo)
+	}
+	// The price rises with the pressure (cheap goods may need a few units to move a whole credit).
+	for _, sl := range st.Stations {
+		for _, after := range sl.Market {
+			if sl.ID == ship.At && after.Good == l.Good && (after.Pressure != 2 || after.Buy < l.Buy) {
+				t.Fatalf("market after buying 2: %+v, before %+v", after, l)
+			}
+		}
+	}
+
+	// A rejected trade returns its error and broadcasts nothing.
+	if err := e.Sell(context.Background(), pid, ship.ID, l.Good, 5); err != game.ErrNotEnoughCargo {
+		t.Fatalf("selling more than held: %v", err)
+	}
+	select {
+	case <-sub.C:
+		t.Fatal("rejected trade caused a broadcast")
+	case <-time.After(50 * time.Millisecond):
+	}
+}

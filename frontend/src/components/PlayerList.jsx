@@ -12,6 +12,9 @@ export default function PlayerList({ players, me }) {
               {p.name}
               {p.id === me && " (you)"}
             </span>
+            <span className="credits" title="credits">
+              {p.credits.toLocaleString()}
+            </span>
             <span className={p.online ? "dot on" : "dot"} title={p.online ? "online" : "offline"} />
           </li>
         ))}
