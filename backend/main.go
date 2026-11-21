@@ -1,57 +1,50 @@
+// Command backend runs the Space Trade game server. It only reads config and
+// wires the pieces together:
+//
+//	internal/game    pure game rules (World, stations, players, ships)
+//	internal/engine  the game loop goroutine that owns the World
+//	internal/api     HTTP routes and the WebSocket protocol
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
-	"github.com/coder/websocket"
+	"github.com/eddyhakimi/space-trade/backend/internal/api"
+	"github.com/eddyhakimi/space-trade/backend/internal/engine"
+	"github.com/eddyhakimi/space-trade/backend/internal/game"
 )
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"status": "alive"})
+type config struct {
+	port string        // PORT, default 8000
+	tick time.Duration // TICK_MS (milliseconds per game tick), default 1000
 }
 
-// TEMP (M0): echoes every message back. Replaced by the game protocol in M3.
-func wsEchoHandler(w http.ResponseWriter, r *http.Request) {
-	c, err := websocket.Accept(w, r, nil) // default: same-origin only
-	if err != nil {
-		log.Printf("ws accept: %v", err)
-		return
+func loadConfig() config {
+	cfg := config{port: "8000", tick: time.Second}
+	if v := os.Getenv("PORT"); v != "" {
+		cfg.port = v
 	}
-	defer c.CloseNow()
-
-	ctx := r.Context()
-	for {
-		typ, data, err := c.Read(ctx)
-		if err != nil {
-			if websocket.CloseStatus(err) == -1 {
-				log.Printf("ws read: %v", err)
-			}
-			return
-		}
-		if err := c.Write(ctx, typ, data); err != nil {
-			log.Printf("ws write: %v", err)
-			return
+	if v := os.Getenv("TICK_MS"); v != "" {
+		if ms, err := strconv.Atoi(v); err == nil && ms > 0 {
+			cfg.tick = time.Duration(ms) * time.Millisecond
+		} else {
+			log.Printf("ignoring invalid TICK_MS=%q", v)
 		}
 	}
-}
-
-func newMux() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /api/v1/health", healthHandler)
-	mux.HandleFunc("GET /api/v1/ws", wsEchoHandler)
-	return mux
+	return cfg
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8000"
-	}
+	cfg := loadConfig()
 
-	log.Printf("backend listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, newMux()))
+	eng := engine.New(game.NewWorld(uint64(time.Now().UnixNano())), cfg.tick)
+	go eng.Run(context.Background())
+
+	log.Printf("backend listening on :%s (tick %s)", cfg.port, cfg.tick)
+	log.Fatal(http.ListenAndServe(":"+cfg.port, api.NewRouter(eng)))
 }

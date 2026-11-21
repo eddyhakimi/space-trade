@@ -1,0 +1,219 @@
+:root {
+  --bg: #070a14;
+  --space: #0b1020;
+  --panel: #121a2e;
+  --border: #24304d;
+  --text: #e6ebf5;
+  --muted: #8a96b3;
+  --accent: #4fc3f7;
+  --ok: #4caf50;
+  --warn: #ffb74d;
+  --bad: #ef5350;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+}
+
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* --- join screen --- */
+.join {
+  max-width: 22rem;
+  margin: 15vh auto 0;
+  padding: 0 1rem;
+  text-align: center;
+}
+.join form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+.join input {
+  font: inherit;
+  padding: 0.5rem 0.7rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.error {
+  color: var(--bad);
+}
+
+/* --- game screen --- */
+.game header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.game header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+}
+.spacer {
+  flex: 1;
+}
+.conn.open {
+  color: var(--ok);
+}
+.conn.connecting,
+.conn.reconnecting {
+  color: var(--warn);
+}
+.tick,
+.captain {
+  color: var(--muted);
+}
+.loading {
+  text-align: center;
+  color: var(--muted);
+  margin-top: 4rem;
+}
+
+.layout {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  align-items: flex-start;
+}
+.starmap {
+  /* square, as large as fits next to the sidebar and below the header */
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: calc(100vh - 6rem);
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+aside {
+  width: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (max-width: 760px) {
+  .layout {
+    flex-direction: column;
+  }
+  .starmap {
+    width: 100%;
+    max-width: none;
+  }
+  aside {
+    width: 100%;
+  }
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+}
+.panel h2 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+.panel p {
+  margin: 0.3rem 0;
+}
+.ship-name {
+  font-weight: 600;
+}
+.hint {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.players {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.players li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+}
+.players .name {
+  flex: 1;
+}
+.players .offline {
+  color: var(--muted);
+}
+.swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+}
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.dot.on {
+  background: var(--ok);
+}
+
+/* --- map --- */
+.station-body {
+  fill: #33415f;
+  stroke: #8a96b3;
+  stroke-width: 2;
+}
+.station-label {
+  fill: var(--muted);
+  font-size: 22px;
+  pointer-events: none;
+}
+.starmap {
+  cursor: crosshair;
+}
+.station.hover .station-body {
+  fill: #1e4a63;
+  stroke: var(--accent);
+  stroke-width: 4;
+}
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #3b1d22;
+  border: 1px solid var(--bad);
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+}

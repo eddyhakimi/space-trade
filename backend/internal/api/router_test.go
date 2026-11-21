@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"context"
@@ -12,9 +12,16 @@ import (
 	"github.com/coder/websocket"
 )
 
+// newTestServer serves the real routes backed by a running engine.
+func newTestServer(t *testing.T) *httptest.Server {
+	t.Helper()
+	srv := httptest.NewServer(NewRouter(startEngine(t, time.Hour)))
+	t.Cleanup(srv.Close)
+	return srv
+}
+
 func TestHealth(t *testing.T) {
-	srv := httptest.NewServer(newMux())
-	defer srv.Close()
+	srv := newTestServer(t)
 
 	res, err := http.Get(srv.URL + "/api/v1/health")
 	if err != nil {
@@ -31,10 +38,10 @@ func TestHealth(t *testing.T) {
 	}
 }
 
-func TestWSEcho(t *testing.T) {
-	srv := httptest.NewServer(newMux())
-	defer srv.Close()
-
+// TestWSRoute checks that /api/v1/ws is wired to the game protocol.
+// The protocol itself is tested in ws_test.go.
+func TestWSRoute(t *testing.T) {
+	srv := newTestServer(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -45,18 +52,16 @@ func TestWSEcho(t *testing.T) {
 	}
 	defer c.CloseNow()
 
-	if err := c.Write(ctx, websocket.MessageText, []byte("hi")); err != nil {
+	if err := c.Write(ctx, websocket.MessageText, []byte(`{"type":"join","name":"Alice"}`)); err != nil {
 		t.Fatal(err)
 	}
-	typ, data, err := c.Read(ctx)
+	_, data, err := c.Read(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if typ != websocket.MessageText || string(data) != "hi" {
-		t.Fatalf("got %v %q, want text \"hi\"", typ, data)
+	var m struct{ Type, PlayerID string }
+	if err := json.Unmarshal(data, &m); err != nil || m.Type != "welcome" || m.PlayerID == "" {
+		t.Fatalf("got %s, want welcome", data)
 	}
-
-	if err := c.Close(websocket.StatusNormalClosure, ""); err != nil {
-		t.Fatal(err)
-	}
+	c.Close(websocket.StatusNormalClosure, "")
 }
