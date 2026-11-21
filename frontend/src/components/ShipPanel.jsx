@@ -96,8 +96,7 @@ export default function ShipPanel({ game, me }) {
       {where}
       <CargoHold state={state} ship={ship} />
       <p className="hint">
-        Click anywhere on the map to fly there — click a station to dock. Shift+click to add a stop to your route.
-        Dock at a station to trade.
+        Click the map to fly, a station to dock and trade. Shift+click adds a stop.
       </p>
     </section>
   );

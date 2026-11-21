@@ -34,8 +34,8 @@ export default function MarketPanel({ game, me, onBuy, onSell }) {
           <tr>
             <th>Good</th>
             <th>Hold</th>
-            <th>Buy</th>
-            <th>Sell</th>
+            <th className="buy">Buy</th>
+            <th className="sell">Sell</th>
           </tr>
         </thead>
         <tbody>
@@ -46,7 +46,7 @@ export default function MarketPanel({ game, me, onBuy, onSell }) {
               <tr key={l.good}>
                 <td>{goodName(l.good)}</td>
                 <td>{held || ""}</td>
-                <td>
+                <td className="buy">
                   {l.buy ? (
                     <>
                       <Price value={l.buy} base={l.baseBuy} />
@@ -67,7 +67,7 @@ export default function MarketPanel({ game, me, onBuy, onSell }) {
                     </span>
                   )}
                 </td>
-                <td>
+                <td className="sell">
                   <Price value={l.sell} base={l.baseSell} />
                   <button disabled={held < 1} onClick={() => onSell(l.good, 1)} title={`Sell 1 for ${l.sell} cr`}>
                     1
@@ -85,10 +85,7 @@ export default function MarketPanel({ game, me, onBuy, onSell }) {
           })}
         </tbody>
       </table>
-      <p className="hint">
-        Hold {used}/{ship.capacity} · prices rise as you buy and fall as you sell, then recover. Goods not listed can't
-        be traded here.
-      </p>
+      <p className="hint">Prices move as you trade, then recover. Unlisted goods can't be traded here.</p>
     </section>
   );
 }

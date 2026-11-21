@@ -114,10 +114,41 @@ button:disabled {
   border-radius: 8px;
 }
 aside {
-  width: 21rem;
+  width: 23rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+/* Side by side, the game fills exactly one screen: the sidebar never grows
+   past the map area; only the market list scrolls if it doesn't fit. */
+@media (min-width: 761px) {
+  .game {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  .layout {
+    flex: 1;
+    min-height: 0;
+  }
+  aside {
+    max-height: 100%;
+    min-height: 0;
+    gap: 0.75rem;
+  }
+  aside .panel {
+    flex-shrink: 0;
+  }
+  aside .market {
+    flex-shrink: 1;
+    min-height: 8rem;
+    overflow-y: auto;
+  }
+  .market thead th {
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+  }
 }
 @media (max-width: 760px) {
   .layout {
@@ -282,6 +313,18 @@ aside {
 }
 .market .na {
   color: var(--muted);
+}
+/* Buy and Sell are separate groups: a divider and space between them. */
+.market th.buy,
+.market th.sell {
+  text-align: center;
+}
+.market .buy {
+  padding-right: 0.6rem;
+}
+.market .sell {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--border);
 }
 /* above/below the normal price; neutral color: high is bad when buying, good when selling */
 .market .trend {
