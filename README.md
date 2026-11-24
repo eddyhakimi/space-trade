@@ -2,6 +2,8 @@
 
 A real-time multiplayer space-trading game for the browser. Fly between stations, trade goods for credits, and plunder AI traders with friends in one shared sector.
 
+![Buying textiles at Vesta Gate, flying to Marrow Point and selling them at a profit while AI traders and another player fly across the map](docs/media/gameplay.gif)
+
 ## Run it
 
 You only need Docker.
